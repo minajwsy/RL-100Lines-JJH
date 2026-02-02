@@ -7,14 +7,15 @@ batch_size, buffer_limit, init_alpha, target_entropy = 32, 50000, 0.01, -1.0
 
 class ReplayBuffer:
     def __init__(self):
-        self.s, self.a, self.r, self.sp, self.d = [T.empty(0, i) for i in [3, 1, 1, 3, 1]]  # state, action, reward, s prime, done
+        self.s, self.a, self.r, self.sp, self.d = [T.zeros(buffer_limit, i) for i in [3, 1, 1, 3, 1]]  # state, action, reward, s prime, done
+        self.buffer_ptr, self.buffer_size = 0, 0
 
     def push(self, transition):
         s, a, r, sp, d = transition
-        self.s, self.a, self.r, self.sp, self.d = [
-            T.cat((T.tensor(new).unsqueeze(0), buffer), 0)[:buffer_limit]
-            for new, buffer in zip([s, [a], [r], sp, [d]], [self.s, self.a, self.r, self.sp, self.d])
-        ]
+        for new, buffer in zip([s, [a], [r], sp, [d]], [self.s, self.a, self.r, self.sp, self.d]):
+            buffer[self.buffer_ptr].copy_(T.as_tensor(new))
+        self.buffer_ptr = (self.buffer_ptr + 1) % buffer_limit
+        self.buffer_size = min(self.buffer_size + 1, buffer_limit)
 
     def sample(self, n):
         idx = T.randperm(len(self))[:n]
@@ -81,7 +82,7 @@ if __name__ == '__main__':
         s, _ = env.reset()
         for _ in range(200):
             a, _ = pi(T.from_numpy(s).float())
-            sp, r, done, truncated, _ = env.step([2.0 * a.item()])
+            sp, r, done, _, _ = env.step([2.0 * a.item()])
             memory.push((s, a.item(), r/10.0, sp, 0. if done else 1.))
             score += r
             s = sp

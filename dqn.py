@@ -1,41 +1,30 @@
 import copy
 
 import gymnasium as gym
-import torch as T
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
+import torch as T, torch.nn as nn
+import torch.nn.functional as F, torch.optim as optim
+from types import SimpleNamespace
 
-# Hyperparameters
-learning_rate = 0.0005
-gamma = 0.98
-buffer_limit = 50000
-batch_size = 32
+learning_rate, gamma, buffer_limit, batch_size = 0.0005, 0.98, 50000, 32
 
-class ReplayBuffer():
+class ReplayBuffer:
     def __init__(self):
-        self.s_lst = T.empty(0, 4)
-        self.a_lst = T.empty(0, 1, dtype=T.int)
-        self.r_lst = T.empty(0, 1)
-        self.s_prime_lst = T.empty(0, 4)
-        self.done_mask_lst = T.empty(0, 1)
+        self.s, self.a, self.r, self.sp, self.d = [T.zeros(buffer_limit, i) for i in [4, 1, 1, 4, 1]]  # state, action, reward, s prime, done
+        self.a = self.a.int()
+        self.buffer_ptr, self.buffer_size = 0, 0
 
-    def push(self, transition):  # Tensor Queue
-        s, a, r, s_prime, done_mask = transition
-        self.s_lst = T.cat((T.tensor(s).unsqueeze(0), self.s_lst), 0)[:buffer_limit]
-        self.a_lst = T.cat((T.tensor([a]).unsqueeze(0), self.a_lst), 0)[:buffer_limit]
-        self.r_lst = T.cat((T.tensor([r]).unsqueeze(0), self.r_lst), 0)[:buffer_limit]
-        self.s_prime_lst = T.cat((T.tensor(s_prime).unsqueeze(0), self.s_prime_lst), 0)[:buffer_limit]
-        self.done_mask_lst = T.cat((T.tensor([done_mask]).unsqueeze(0), self.done_mask_lst), 0)[:buffer_limit]
+    def push(self, transition):
+        s, a, r, sp, d = transition
+        for new, buffer in zip([s, [a], [r], sp, [d]], [self.s, self.a, self.r, self.sp, self.d]):
+            buffer[self.buffer_ptr].copy_(T.as_tensor(new))
+        self.buffer_ptr = (self.buffer_ptr + 1) % buffer_limit
+        self.buffer_size = min(self.buffer_size + 1, buffer_limit)
 
     def sample(self, n):
-        idx = T.randperm(self.__len__())[:batch_size]
+        idx = T.randperm(len(self))[:n]
+        return SimpleNamespace(s=self.s[idx], a=self.a[idx], r=self.r[idx], sp=self.sp[idx], done=self.d[idx])
 
-        return self.s_lst[idx], self.a_lst[idx], self.r_lst[idx], \
-            self.s_prime_lst[idx], self.done_mask_lst[idx]
-
-    def __len__(self):
-        return int(self.s_lst.shape[0])
+    def __len__(self): return self.s.shape[0]
 
 def sample_action(q, obs, eps):
     out = q(obs)
@@ -44,10 +33,10 @@ def sample_action(q, obs, eps):
 
 def train(q, q_target, memory, optimizer):
     for i in range(10):
-        s, a, r, s_prime, done_mask = memory.sample(batch_size)
-        q_a = q(s).gather(1, a)
-        max_q_prime = q_target(s_prime).max(1, True)[0]
-        target = r + gamma * max_q_prime * done_mask
+        mb = memory.sample(batch_size)
+        q_a = q(mb.s).gather(1, mb.a)
+        max_q_prime = q_target(mb.sp).max(1, True)[0]
+        target = mb.r + gamma * max_q_prime * mb.done
         loss = F.smooth_l1_loss(q_a, target)
 
         optimizer.zero_grad()
@@ -77,8 +66,7 @@ def main():
         while not done:
             a = sample_action(q, T.tensor(s), eps)
             s_prime, r, done, _, _ = env.step(a)
-            done_mask = 0.0 if done else 1.0
-            memory.push((s, a, r/100.0, s_prime, done_mask))
+            memory.push((s, a, r/100.0, s_prime, 0. if done else 1.))
             s = s_prime
 
             score += r
