@@ -49,7 +49,7 @@ def calc_target(pi_t, q1_t, q2_t, mb):
         return (mb.r + gamma * mb.done * min_q_next_target).view(-1)
 
 if __name__ == "__main__":
-    env, memory = gym.make('Pendulum-v1'), ReplayBuffer()
+    env, memory = gym.make('Pendulum-v1', render_mode='human'), ReplayBuffer()
     q1, q2, q1_t, q2_t, pi, pi_t = QNet(), QNet(), QNet(), QNet(), PolicyNet(), PolicyNet()
     pi_t.load_state_dict(pi.state_dict())
     pi_optimizer = T.optim.Adam(list(pi.parameters()), lr=pi_lr)
