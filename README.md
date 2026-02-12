@@ -1,8 +1,8 @@
 # 100LinesRL
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.7+-blue.svg)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)
+![Python](https://img.shields.io/badge/python-3.12+-blue.svg)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.10+-ee4c2c.svg)
 ![Code Size](https://img.shields.io/github/languages/code-size/jaehyun-jeong/100LinesRL)
 ![Stars](https://img.shields.io/github/stars/jaehyun-jeong/100LinesRL?style=social)
 
@@ -21,8 +21,16 @@ Inspired by [minimalRL](https://github.com/seungeunrho/minimalRL).
 4. [TD3](https://github.com/jaehyun-jeong/100LinesRL/blob/master/td3.py) (100 lines)
 
 ## Dependencies
-1. PyTorch
-2. gymnasium
+1. [PyTorch](https://pytorch.org/) >= 2.10.0
+2. [Gymnasium](https://gymnasium.farama.org/) >= 1.2.3 (with `mujoco` extra for MuJoCo environments)
+3. [NumPy](https://numpy.org/) >= 2.4.2
+4. [Shimmy](https://shimmy.farama.org/) >= 2.0.0 (with `dm-control` extra for DeepMind Control Suite)
+5. [tqdm](https://tqdm.github.io/) (for PPO progress bar)
+
+### Install
+```bash
+pip install -r requirements.txt
+```
 
 ## Usage
 ```bash
