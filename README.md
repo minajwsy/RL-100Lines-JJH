@@ -14,6 +14,8 @@ Inspired by [minimalRL](https://github.com/seungeunrho/minimalRL).
 
 * Length of each file is up to 100 lines of codes.
 
+* PPO supports Gymnasium, MuJoCo, and DeepMind Control environments.
+
 ## Algorithms
 1. [DQN](https://github.com/jaehyun-jeong/100LinesRL/blob/master/dqn.py) (86 lines, including replay memory and target network)
 2. [PPO](https://github.com/jaehyun-jeong/100LinesRL/blob/master/ppo.py) (100 lines, including GAE)
