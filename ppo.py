@@ -23,7 +23,7 @@ class PPO(nn.Module):
     def __init__(self, s_dim, a_dim, is_cts):
         super().__init__()
         self.is_cts, self.s_dim, self.a_dim = is_cts, s_dim, a_dim
-        self.buffer_ptr = 0
+        self.buf, self.p = [T.zeros(conf.T_horizon, i) for i in [self.s_dim, self.a_dim if self.is_cts else 1, 1, self.s_dim, 1, 1]], 0
         self.s, self.a, self.r, self.sp, self.log_prob_a, self.not_done = [T.zeros(conf.T_horizon, i) for i in [self.s_dim, self.a_dim if self.is_cts else 1, 1, self.s_dim, 1, 1]]
 
         self.pi_net, self.v_net = [nn.Sequential(
@@ -51,27 +51,27 @@ class PPO(nn.Module):
     def v(self, x): return self.v_head(self.v_net(x))
 
     def push(self, transition):
-        for val, buffer in zip(transition, [self.s, self.a, self.r, self.sp, self.log_prob_a, self.not_done]):
-            buffer[self.buffer_ptr].copy_(T.as_tensor(val))
-        self.buffer_ptr = (self.buffer_ptr + 1) % conf.T_horizon
+        for val, buf in zip(transition, self.buf): buf[self.p].copy_(T.as_tensor(val))
+        self.p = (self.p + 1) % conf.T_horizon
 
     def train_net(self):
+        s, a, r, sp, log_p, not_d = self.buf
         with T.no_grad():  # Calculate GAE
-            vals = self.v(self.s)
-            deltas = self.r + conf.gamma * T.cat([vals[1:], self.v(self.sp[-1].unsqueeze(0))]) * self.not_done - vals
-            advantages, gae = T.zeros_like(self.r), 0
-            for t in reversed(range(len(self.r))):
-                advantages[t] = gae = deltas[t] + conf.gamma * conf.lmbda * self.not_done[t] * gae
+            vals = self.v(s)
+            deltas = r + conf.gamma * T.cat([vals[1:], self.v(sp[-1].unsqueeze(0))]) * not_d - vals
+            advantages, gae = T.zeros_like(r), 0
+            for t in reversed(range(len(r))):
+                advantages[t] = gae = deltas[t] + conf.gamma * conf.lmbda * not_d[t] * gae
             returns = advantages + vals
             advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
         for _ in range(conf.K_epoch):  # Update Parameters
-            for inds in T.randperm(len(self.r)).split(conf.mb_size):
-                _, _, log_prob_a, dist = self.pi(self.s[inds], self.a[inds])
-                ratio = T.exp(log_prob_a - self.log_prob_a[inds])
+            for inds in T.randperm(len(r)).split(conf.mb_size):
+                _, _, log_prob_a, dist = self.pi(s[inds], a[inds])
+                ratio = T.exp(log_prob_a - log_p[inds])
 
                 loss = -T.min(ratio * advantages[inds], T.clamp(ratio, 1-conf.eps_clip, 1+conf.eps_clip) * advantages[inds]).mean() \
-                    + conf.vf_coef * F.smooth_l1_loss(self.v(self.s[inds]), returns[inds]) - conf.ent_coef * dist.entropy().mean()
+                    + conf.vf_coef * F.smooth_l1_loss(self.v(s[inds]), returns[inds]) - conf.ent_coef * dist.entropy().mean()
 
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -81,9 +81,8 @@ class PPO(nn.Module):
 if __name__ == '__main__':
     env, is_cts, s_dim, a_dim = make_env(conf.env_name)
     model = PPO(s_dim, a_dim, is_cts)
-    s, _ = env.reset()
-    score, n_epi, print_interval, pbar = 0.0, 0, 20, tqdm(range(conf.max_timesteps))
-    for n_step in pbar:
+    s, score, n_epi, print_interval = env.reset()[0], 0.0, 0, 20
+    for n_step in tqdm(range(conf.max_timesteps)):
         model.optimizer.param_groups[0]['lr'] = conf.lr * (1 - n_step / conf.max_timesteps)
         a, a_in, log_prob, _ = model.pi(T.from_numpy(s).float().unsqueeze(0))
         sp, r, done, trunc, info = env.step(a_in)
@@ -93,6 +92,7 @@ if __name__ == '__main__':
             if (n_epi+1) % print_interval == 0:
                 tqdm.write(f"step {n_step+1} episode {n_epi+1} avg score {score/print_interval:.1f} lr {model.optimizer.param_groups[0]['lr']:.6f}")
                 score = 0.0
-        s = env.reset()[0] if (done or trunc) else sp
+            s, _ = env.reset()
+        else: s = sp
         if (n_step+1) % conf.T_horizon == 0: model.train_net()
     env.close()
