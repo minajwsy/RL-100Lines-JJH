@@ -24,7 +24,6 @@ class PPO(nn.Module):
         super().__init__()
         self.is_cts, self.s_dim, self.a_dim = is_cts, s_dim, a_dim
         self.buf, self.p = [T.zeros(conf.T_horizon, i) for i in [self.s_dim, self.a_dim if self.is_cts else 1, 1, self.s_dim, 1, 1]], 0
-        self.s, self.a, self.r, self.sp, self.log_prob_a, self.not_done = [T.zeros(conf.T_horizon, i) for i in [self.s_dim, self.a_dim if self.is_cts else 1, 1, self.s_dim, 1, 1]]
 
         self.pi_net, self.v_net = [nn.Sequential(
             layer_init(nn.Linear(s_dim, 256)), nn.ReLU(),
