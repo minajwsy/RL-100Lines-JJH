@@ -18,7 +18,7 @@ Inspired by [minimalRL](https://github.com/seungeunrho/minimalRL).
 
 ## Algorithms
 1. [DQN](https://github.com/jaehyun-jeong/100LinesRL/blob/master/dqn.py) (86 lines, including replay memory and target network)
-2. [PPO](https://github.com/jaehyun-jeong/100LinesRL/blob/master/ppo.py) (100 lines, including GAE)
+2. [PPO](https://github.com/jaehyun-jeong/100LinesRL/blob/master/ppo.py) (98 lines, including GAE)
 3. [SAC](https://github.com/jaehyun-jeong/100LinesRL/blob/master/sac.py) (100 lines)
 4. [TD3](https://github.com/jaehyun-jeong/100LinesRL/blob/master/td3.py) (100 lines)
 
@@ -39,7 +39,7 @@ pip install -r requirements.txt
 # Works only with Python 3.
 # e.g.
 python3 dqn.py
-python3 ppo.py
+python3 ppo.py --env "Hopper-v5"
 python3 sac.py
 python3 td3.py
 ```

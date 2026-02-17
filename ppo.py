@@ -27,14 +27,14 @@ class PPO(nn.Module):
         self.s, self.a, self.r, self.sp, self.log_prob_a, self.not_done = [T.zeros(conf.T_horizon, i) for i in [self.s_dim, self.a_dim if self.is_cts else 1, 1, self.s_dim, 1, 1]]
 
         self.pi_net, self.v_net = [nn.Sequential(
-            layer_init(nn.Linear(s_dim, 256)), nn.Tanh(),
-            layer_init(nn.Linear(256, 256)), nn.Tanh()
+            layer_init(nn.Linear(s_dim, 256)), nn.ReLU(),
+            layer_init(nn.Linear(256, 256)), nn.ReLU()
         ) for _ in range(2)]
         if self.is_cts:
             self.mu_head = layer_init(nn.Linear(256, a_dim), std=0.01)
             self.log_std = nn.Parameter(T.zeros(a_dim))
         else:
-            self.pi_head = nn.Sequential(layer_init(nn.Linear(256, a_dim), std=0.01), nn.Softmax(dim=-1))
+            self.pi_head = nn.Sequential(layer_init(nn.Linear(256, a_dim), std=0.01))
         self.v_head = layer_init(nn.Linear(256, 1), std=1.0)
         self.optimizer = optim.Adam(self.parameters(), lr=conf.lr)
 
@@ -44,9 +44,9 @@ class PPO(nn.Module):
             if a is None: a = dist.sample()
             return a.squeeze(0), a.squeeze(0).detach().numpy(), dist.log_prob(a).sum(dim=-1, keepdim=True), dist
 
-        dist = Categorical(self.pi_head(self.pi_net(x)))
+        dist = Categorical(logits=self.pi_head(self.pi_net(x)))
         if a is None: a = dist.sample()
-        return a, a.item(), dist.log_prob(a.squeeze(-1) if a.dim() > 1 else a).unsqueeze(-1), dist
+        return a, a.item() if a.numel() == 1 else None, dist.log_prob(a.squeeze(-1).long() if a.dim() > 1 else a.long()).unsqueeze(-1), dist
 
     def v(self, x): return self.v_head(self.v_net(x))
 
