@@ -41,6 +41,6 @@ pip install -r requirements.txt
 # e.g.
 python3 dqn.py
 python3 ppo.py --env "Hopper-v5"
-python3 sac.py
+python3 sac.py --env "dm_control/cheetah-run-v0"
 python3 td3.py
 ```
