@@ -10,16 +10,17 @@ Implementations of basic RL algorithms with minimal lines of codes! (PyTorch bas
 
 Inspired by [minimalRL](https://github.com/seungeunrho/minimalRL).
 
-* Each algorithm is complete within a single file.
+* Each core algorithm is complete within a single file.
 
 * Length of each file is up to 100 lines of codes.
 
-* PPO supports Gymnasium, MuJoCo, and DeepMind Control environments.
+* PPO and SAC support Gymnasium, MuJoCo, and DeepMind Control environments for both discrete and continuous action spaces.
+    * See ppo_config.py and sac_config.py for detailed hyperparameter settings.
 
 ## Algorithms
 1. [DQN](https://github.com/jaehyun-jeong/100LinesRL/blob/master/dqn.py) (86 lines, including replay memory and target network)
 2. [PPO](https://github.com/jaehyun-jeong/100LinesRL/blob/master/ppo.py) (97 lines, including GAE)
-3. [SAC](https://github.com/jaehyun-jeong/100LinesRL/blob/master/sac.py) (100 lines)
+3. [SAC](https://github.com/jaehyun-jeong/100LinesRL/blob/master/sac.py) (98 lines)
 4. [TD3](https://github.com/jaehyun-jeong/100LinesRL/blob/master/td3.py) (100 lines)
 
 ## Dependencies
