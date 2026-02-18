@@ -59,7 +59,7 @@ ENV_CONFIGS = {
     },
 
     'Walker2d-v5': {
-        # [target score] 3,000 ~ 4,000 점
+        # [target score] 3,000 ~ 4,000
         'lr': 3e-4,
         'gamma': 0.99,
         'lmbda': 0.95,
