@@ -17,6 +17,8 @@ Inspired by [minimalRL](https://github.com/seungeunrho/minimalRL).
 * PPO and SAC support Gymnasium, MuJoCo, and DeepMind Control environments for both discrete and continuous action spaces.
     * See ppo_config.py and sac_config.py for detailed hyperparameter settings.
 
+![](./rewards.png)
+
 ## Algorithms
 1. [DQN](https://github.com/jaehyun-jeong/100LinesRL/blob/master/dqn.py) (86 lines, including replay memory and target network)
 2. [PPO](https://github.com/jaehyun-jeong/100LinesRL/blob/master/ppo.py) (97 lines, including GAE)
