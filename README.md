@@ -30,7 +30,7 @@ Inspired by [minimalRL](https://github.com/seungeunrho/minimalRL).
 2. [Gymnasium](https://gymnasium.farama.org/) >= 1.2.3 (with `mujoco` extra for MuJoCo environments)
 3. [NumPy](https://numpy.org/) >= 2.4.2
 4. [Shimmy](https://shimmy.farama.org/) >= 2.0.0 (with `dm-control` extra for DeepMind Control Suite)
-5. [tqdm](https://tqdm.github.io/) (for PPO progress bar)
+5. [tqdm](https://tqdm.github.io/) (for progress bar)
 
 ### Install
 ```bash
