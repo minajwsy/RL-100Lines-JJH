@@ -17,9 +17,10 @@ ENV_CONFIGS = {
         'K_epoch': 3,
         'T_horizon': 128,
         'mb_size': 32,
+        'n_envs': 4,
         'max_timesteps': 100_000,
         'vf_coef': 0.5,
-        'ent_coef': 0.01
+        'ent_coef': 0.01,
     },
 
     # --------------------------------------------------------------------------
@@ -35,9 +36,10 @@ ENV_CONFIGS = {
         'K_epoch': 10,
         'T_horizon': 2048,
         'mb_size': 64,
+        'n_envs': 4,
         'max_timesteps': 1_000_000,
         'vf_coef': 0.5,
-        'ent_coef': 0.0
+        'ent_coef': 0.0,
     },
 
     # --------------------------------------------------------------------------
@@ -53,6 +55,7 @@ ENV_CONFIGS = {
         'K_epoch': 10,
         'T_horizon': 2048,
         'mb_size': 64,
+        'n_envs': 4,
         'max_timesteps': 1_000_000,
         'vf_coef': 0.5,
         'ent_coef': 0.0
@@ -68,6 +71,7 @@ ENV_CONFIGS = {
         'K_epoch': 10,
         'T_horizon': 2048,
         'mb_size': 64,
+        'n_envs': 4,
         'max_timesteps': 1_000_000,
         'vf_coef': 0.5,
         'ent_coef': 0.0
@@ -86,6 +90,7 @@ ENV_CONFIGS = {
         'K_epoch': 10,
         'T_horizon': 2048,
         'mb_size': 64,
+        'n_envs': 4,
         'max_timesteps': 5_000_000,
         'vf_coef': 0.5,
         'ent_coef': 0.01
@@ -101,6 +106,7 @@ ENV_CONFIGS = {
         'K_epoch': 10,
         'T_horizon': 2048,
         'mb_size': 64,
+        'n_envs': 4,
         'max_timesteps': 2_000_000,
         'vf_coef': 0.5,
         'ent_coef': 0.01
@@ -136,3 +142,4 @@ max_grad_norm = cfg['max_grad_norm']
 max_timesteps = cfg['max_timesteps']
 vf_coef = cfg['vf_coef']
 ent_coef = cfg['ent_coef']
+n_envs = cfg['n_envs']
