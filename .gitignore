@@ -3,3 +3,4 @@ pyproject.toml
 .python-version
 __pycache__/
 *.out
+*.sh
