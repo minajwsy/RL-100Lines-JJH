@@ -72,7 +72,7 @@ class PPO(nn.Module):
                 ratio = T.exp(log_prob_a - log_p[inds])
 
                 loss = -T.min(ratio * advantages[inds], T.clamp(ratio, 1-conf.eps_clip, 1+conf.eps_clip) * advantages[inds]).mean() \
-                    + conf.vf_coef * F.mse_loss(self.v(s[inds]), returns[inds]) \
+                    + 0.5 * conf.vf_coef * F.mse_loss(self.v(s[inds]), returns[inds]) \
                     - conf.ent_coef * (dist.entropy().sum(-1) if self.is_cts else dist.entropy()).mean()
 
                 self.optimizer.zero_grad()
@@ -84,13 +84,13 @@ if __name__ == '__main__':
     envs = gym.vector.SyncVectorEnv([make_env(conf.env_name) for _ in range(conf.n_envs)])
     is_cts, s_dim = isinstance(envs.single_action_space, gym.spaces.Box), envs.single_observation_space.shape[0]
     a_dim = envs.single_action_space.shape[0] if is_cts else envs.single_action_space.n
-    model = PPO(s_dim, a_dim, is_cts)
+    model, total_step = PPO(s_dim, a_dim, is_cts), conf.max_timesteps // conf.n_envs
     s, score, n_epi, print_interval = envs.reset()[0], 0.0, 0, 20
-    for n_step in tqdm(range(conf.max_timesteps)):
-        model.optimizer.param_groups[0]['lr'] = conf.lr * (1 - n_step / conf.max_timesteps)
+    for n_step in tqdm(range(total_step)):
+        model.optimizer.param_groups[0]['lr'] = conf.lr * (1 - n_step / total_step)
         a, a_in, log_prob, _ = model.pi(T.from_numpy(s).float().to(conf.device))
         sp, r, done, trunc, info = envs.step(a_in)
-        model.push((s, a, r, sp, log_prob.detach(), 1 - (done | trunc)))
+        model.push((s, a, r, sp, log_prob.detach(), 1. - (done | trunc)))
         s = sp
         if "episode" in info:
             mask = info.get("_episode", (done | trunc))
@@ -100,7 +100,7 @@ if __name__ == '__main__':
                     ep_r = info['episode']['r'][i]
                     score += float(ep_r.item() if hasattr(ep_r, 'item') else ep_r)
                     if n_epi % print_interval == 0:
-                        tqdm.write(f"step {n_step+1} episode {n_epi} avg score {score/print_interval:.1f} lr {model.optimizer.param_groups[0]['lr']:.6f}")
+                        tqdm.write(f"step {(n_step+1)*conf.n_envs} episode {n_epi} avg score {score/print_interval:.1f} lr {model.optimizer.param_groups[0]['lr']:.6f}")
                         score = 0.0
         if (n_step+1) % conf.T_horizon == 0: model.train_net()
     envs.close()
