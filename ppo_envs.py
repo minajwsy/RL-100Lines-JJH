@@ -44,7 +44,7 @@ class PPO(nn.Module):
 
         dist = Categorical(logits=self.pi_head(self.pi_net(x)))
         if a is None: a = dist.sample()
-        return a, a.detach().cpu().numpy() , dist.log_prob(a.squeeze(-1).long() if a.dim() > 1 else a.long()).unsqueeze(-1), dist
+        return a, a.detach().cpu().numpy(), dist.log_prob(a.squeeze(-1).long() if a.dim() > 1 else a.long()).unsqueeze(-1), dist
 
     def v(self, x): return self.v_head(self.v_net(x))
 
