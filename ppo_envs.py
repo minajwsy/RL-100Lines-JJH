@@ -1,4 +1,4 @@
-import gymnasium as gym, torch as T, torch.nn as nn, torch.nn.functional as F, torch.optim as optim, numpy as np, ppo_config as conf, shimmy
+import gymnasium as gym, gymnasium.wrappers as wrappers, torch as T, torch.nn as nn, torch.nn.functional as F, torch.optim as optim, numpy as np, ppo_config as conf, shimmy
 from torch.distributions import Categorical, Normal
 from tqdm import tqdm
 
@@ -9,15 +9,16 @@ def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
 
 def make_envs(env_id, n_envs):
     envs = gym.vector.SyncVectorEnv([lambda: gym.make(env_id) for _ in range(n_envs)])
-    envs = gym.wrappers.vector.FlattenObservation(envs)
-    envs = gym.wrappers.vector.RecordEpisodeStatistics(envs)
-    envs = gym.wrappers.vector.NormalizeObservation(envs)
-    envs = gym.wrappers.vector.TransformObservation(envs, lambda obs: np.clip(obs, -10, 10))
-    envs = gym.wrappers.vector.NormalizeReward(envs, gamma=conf.gamma)
-    envs = gym.wrappers.vector.TransformReward(envs, lambda r: np.clip(r, -10, 10))
-    is_cts, s_dim = isinstance(envs.single_action_space, gym.spaces.Box), envs.single_observation_space.shape[0]
-    a_dim = envs.single_action_space.shape[0] if is_cts else envs.single_action_space.n
-    return envs, is_cts, s_dim, a_dim
+    envs = wrappers.vector.FlattenObservation(envs)
+    envs = wrappers.vector.RecordEpisodeStatistics(envs)
+    envs = wrappers.vector.NormalizeObservation(envs)
+    envs = wrappers.vector.TransformObservation(envs, lambda obs: np.clip(obs, -10, 10))
+    envs = wrappers.vector.NormalizeReward(envs, gamma=conf.gamma)
+    envs = wrappers.vector.TransformReward(envs, lambda r: np.clip(r, -10, 10))
+    if (is_cts := isinstance(envs.single_action_space, gym.spaces.Box)):
+        envs = wrappers.vector.RescaleAction(envs, -1.0, 1.0)
+        envs = wrappers.vector.ClipAction(envs)
+    return envs, is_cts, envs.single_observation_space.shape[0], envs.single_action_space.shape[0] if is_cts else envs.single_action_space.n
 
 class PPO(nn.Module):
     def __init__(self, s_dim, a_dim, is_cts):
@@ -26,8 +27,8 @@ class PPO(nn.Module):
         self.buf, self.p = [T.zeros(conf.T_horizon, conf.n_envs, i, device=conf.device) for i in [self.s_dim, self.a_dim if is_cts else 1, 1, self.s_dim, 1, 1]], 0
 
         self.pi_net, self.v_net = [nn.Sequential(
-            layer_init(nn.Linear(s_dim, 256)), nn.ReLU(),
-            layer_init(nn.Linear(256, 256)), nn.ReLU()
+            layer_init(nn.Linear(s_dim, 256)), nn.Tanh(),
+            layer_init(nn.Linear(256, 256)), nn.Tanh()
         ) for _ in range(2)]
         self.mu_head = layer_init(nn.Linear(256, a_dim), std=0.01) if is_cts else None
         self.log_std = nn.Parameter(T.zeros(a_dim)) if is_cts else None
@@ -55,21 +56,22 @@ class PPO(nn.Module):
     def train_net(self):
         s, a, r, sp, log_p, not_d = self.buf
         with T.no_grad():  # Calculate GAE
-            vals = self.v(s)
-            deltas = r + conf.gamma * T.cat([vals[1:], self.v(sp[-1].unsqueeze(0))]) * not_d - vals
+            vals, next_vals = self.v(s), self.v(sp)
+            deltas = r + conf.gamma * next_vals * not_d - vals
             advantages, gae = T.zeros_like(r), 0
             for t in reversed(range(len(r))):
                 advantages[t] = gae = deltas[t] + conf.gamma * conf.lmbda * not_d[t] * gae
             returns = advantages + vals
-            advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
         s, a, log_p, advantages, returns = [x.flatten(0, 1) for x in (s, a, log_p, advantages, returns)]
         for _ in range(conf.K_epoch):  # Update Parameters
-            for inds in T.randperm(len(s), device=conf.device).split(conf.mb_size * conf.n_envs):
+            for inds in T.randperm(len(s), device=conf.device).split(conf.mb_size):
+                mb_adv = advantages[inds]
+                mb_adv = (mb_adv - mb_adv.mean()) / (mb_adv.std() + 1e-8)
                 _, _, log_prob_a, dist = self.pi(s[inds], a[inds])
                 ratio = T.exp(log_prob_a - log_p[inds])
 
-                loss = -T.min(ratio * advantages[inds], T.clamp(ratio, 1-conf.eps_clip, 1+conf.eps_clip) * advantages[inds]).mean() \
+                loss = -T.min(ratio * mb_adv, T.clamp(ratio, 1-conf.eps_clip, 1+conf.eps_clip) * mb_adv).mean() \
                     + 0.5 * conf.vf_coef * F.mse_loss(self.v(s[inds]), returns[inds]) \
                     - conf.ent_coef * (dist.entropy().sum(-1) if self.is_cts else dist.entropy()).mean()
 
