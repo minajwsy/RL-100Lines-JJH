@@ -24,7 +24,7 @@ class PPO(nn.Module):
     def __init__(self, s_dim, a_dim, is_cts):
         super().__init__()
         self.is_cts, self.s_dim, self.a_dim = is_cts, s_dim, a_dim
-        self.buf, self.p = [T.zeros(conf.T_horizon, conf.n_envs, i, device=conf.device) for i in [self.s_dim, self.a_dim if is_cts else 1, 1, self.s_dim, 1, 1]], 0
+        self.buf, self.p = [T.zeros(conf.T_horizon, conf.n_envs, i, device=conf.device) for i in [s_dim, a_dim if is_cts else 1, 1, s_dim, 1, 1]], 0
 
         self.pi_net, self.v_net = [nn.Sequential(
             layer_init(nn.Linear(s_dim, 256)), nn.Tanh(),
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     model, total_step = PPO(s_dim, a_dim, is_cts), conf.max_timesteps // conf.n_envs
     s, score, n_epi, print_interval = envs.reset()[0], 0.0, 0, 20
     for n_step in tqdm(range(total_step), unit_scale=conf.n_envs, unit="step"):
-        model.optimizer.param_groups[0]['lr'] = conf.lr * (1 - n_step / total_step)
+        model.optimizer.param_groups[0]['lr'] = lr = conf.lr * (1 - n_step / total_step)
         a, a_in, log_prob, _ = model.pi(T.from_numpy(s).float().to(conf.device))
         sp, r, done, trunc, info = envs.step(a_in)
         model.push((s, a, r.copy(), sp, log_prob.detach(), 1. - (done | trunc)))
@@ -94,7 +94,7 @@ if __name__ == '__main__':
             for i in np.where(info["_episode"])[0]:
                 score += float(np.array(info["episode"]["r"][i]).item())
                 if (n_epi := n_epi + 1) % print_interval == 0:
-                    tqdm.write(f"step {(n_step+1)*conf.n_envs} episode {n_epi} avg score {score/print_interval:.1f} lr {model.optimizer.param_groups[0]['lr']:.6f}")
+                    tqdm.write(f"step {(n_step+1)*conf.n_envs} episode {n_epi} avg score {score/print_interval:.1f} lr {lr:.6f}")
                     score = 0.0
         if (n_step+1) % conf.T_horizon == 0: model.train_net()
     envs.close()
