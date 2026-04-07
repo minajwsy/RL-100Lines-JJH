@@ -22,6 +22,12 @@ Inspired by [minimalRL](https://github.com/seungeunrho/minimalRL).
 
 ![](./rewards.png)
 
+| | | | |
+|:---:|:---:|:---:|:---:|
+| **Classic** | ![](./gifs/sac_CartPole-v1.gif) <br> sac/CartPole-v1 | ![](./gifs/sac_Pendulum-v1.gif) <br> sac/Pendulum-v1 | |
+| **MuJoCo** | ![](./gifs/sac_HalfCheetah-v5.gif) <br> sac/HalfCheetah-v5 | ![](./gifs/sac_Hopper-v5.gif) <br> sac/Hopper-v5 | ![](./gifs/sac_Humanoid-v4.gif) <br> sac/Humanoid-v4 |
+| **DMControl** | ![](./gifs/sac_cheetah-run-v0.gif) <br> sac/cheetah-run-v0 | ![](./gifs/sac_walker-walk-v0.gif) <br> sac/walker-walk-v0 | |
+
 ## Algorithms
 1. [DQN](https://github.com/jaehyun-jeong/100LinesRL/blob/master/dqn.py) (86 lines, including replay memory and target network)
 2. [PPO](https://github.com/jaehyun-jeong/100LinesRL/blob/master/ppo.py) (100 lines, including GAE and vectorized environments)
