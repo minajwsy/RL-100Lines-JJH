@@ -87,9 +87,7 @@ if __name__ == '__main__':
         with T.no_grad():
             a = T.stack([T.tensor(envs.single_action_space.sample()) for _ in range(conf.n_envs)]) if n_step * conf.n_envs < conf.learning_starts else pi(T.from_numpy(s).float().to(conf.device))[0]
         sp, r, done, trunc, info = envs.step(a.cpu().numpy())
-        for i in range(conf.n_envs):
-            real_sp = info['final_observation'][i] if (done[i] or trunc[i]) and "final_observation" in info else sp[i]
-            buf.push((s[i], a[i].detach(), r[i], real_sp, 0. if (done[i] or trunc[i]) else 1.))
+        for i in range(conf.n_envs): buf.push((s[i], a[i].detach(), r[i], sp[i], 0. if (done[i] or trunc[i]) else 1.))
         s = sp
         if "episode" in info and "_episode" in info:
             for i in np.where(info["_episode"])[0]:
