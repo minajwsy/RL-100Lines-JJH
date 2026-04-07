@@ -83,7 +83,7 @@ if __name__ == '__main__':
     [qt.load_state_dict(q.state_dict()) for qt, q in [(q1_t, q1), (q2_t, q2)]]
     for n_step in tqdm(range(conf.max_timesteps // conf.n_envs), unit_scale=conf.n_envs, unit="step"):
         a = T.stack([T.tensor(envs.single_action_space.sample()) for _ in range(conf.n_envs)]) if n_step * conf.n_envs < conf.learning_starts else pi(T.from_numpy(s).float().to(conf.device))[0]
-        sp, r, done, trunc, info = envs.step(a.cpu().numpy())
+        sp, r, done, trunc, info = envs.step(a.cpu().detach().numpy())
         for i in range(conf.n_envs): buf.push((s[i], a[i].detach(), r[i], sp[i], 0. if done[i] else 1.))
         s = sp
         for i in np.where(info.get("_episode", []))[0]:
