@@ -1,5 +1,8 @@
+import torch as T
 import argparse
 import numpy as np
+
+device = T.device('cuda' if T.cuda.is_available() else 'cpu')
 
 # ==============================================================================
 # SAC Hyperparameters & Benchmarks

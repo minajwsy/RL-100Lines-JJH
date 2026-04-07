@@ -21,7 +21,8 @@ class Buffer:
 
     def sample(self, n):
         idx = (T.randint(0, self.bsize, (n,)))
-        return SimpleNamespace(s=self.b[0][idx], a=self.b[1][idx], r=self.b[2][idx], sp=self.b[3][idx], done=self.b[4][idx])
+        s, a, r, sp, done = [b[idx].to(conf.device) for b in self.b]
+        return SimpleNamespace(s=s, a=a, r=r, sp=sp, done=done)
 
 class PolicyNet(nn.Module):
     def __init__(self, s_dim, a_dim, is_cts):
@@ -29,7 +30,8 @@ class PolicyNet(nn.Module):
         self.is_cts, self.bb = is_cts, nn.Sequential(nn.Linear(s_dim, 256), nn.ReLU(), nn.Linear(256, 256), nn.ReLU())
         if is_cts: self.mu, self.log_std = nn.Linear(256, a_dim), nn.Sequential(nn.Linear(256, a_dim))
         else: self.pi = nn.Sequential(nn.Linear(256, a_dim))
-        self.log_alpha = nn.Parameter(T.tensor(conf.init_alpha).log())
+        self.log_alpha = nn.Parameter(T.tensor(conf.init_alpha, device=conf.device).log())
+        self.to(conf.device)
         self.optimizer = T.optim.Adam([p for n, p in self.named_parameters() if 'alpha' not in n], lr=conf.lr_pi)
         self.alpha_optimizer = T.optim.Adam([self.log_alpha], lr=conf.lr_alpha)
 
@@ -57,6 +59,7 @@ class QNet(nn.Module):
         super().__init__()
         self.is_cts, in_dim, out_dim = is_cts, s_dim + (a_dim if is_cts else 0), 1 if is_cts else a_dim
         self.net = nn.Sequential(nn.Linear(in_dim, 256), nn.ReLU(), nn.Linear(256, 256), nn.ReLU(), nn.Linear(256, out_dim))
+        self.to(conf.device)
         self.optimizer = T.optim.Adam(self.parameters(), lr=conf.lr_q)
 
     def forward(self, s, a=None): return self.net(T.cat([s, a], dim=1) if self.is_cts else s)
@@ -79,7 +82,7 @@ if __name__ == '__main__':
     q1, q2, q1_t, q2_t = [QNet(s_dim, a_dim, is_cts) for _ in range(4)]
     [qt.load_state_dict(q.state_dict()) for qt, q in [(q1_t, q1), (q2_t, q2)]]
     for n_step in tqdm(range(conf.max_timesteps)):
-        with T.no_grad(): a = T.tensor(env.action_space.sample()) if n_step < conf.learning_starts else pi(T.from_numpy(s).float())[0]
+        with T.no_grad(): a = T.tensor(env.action_space.sample()) if n_step < conf.learning_starts else pi(T.from_numpy(s).float().to(conf.device))[0]
         sp, r, done, trunc, info = env.step(a.cpu().numpy() if is_cts else a.item())
         buf.push((s, a.detach(), r, sp, 0. if done else 1.))
         if done or trunc:
