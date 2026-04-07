@@ -15,6 +15,7 @@ ENV_CONFIGS = {
     # --------------------------------------------------------------------------
     # 1. Gymnasium (Classic Control - Toy Environments)
     # --------------------------------------------------------------------------
+    # Expected Return: -150 ~ -200
     'Pendulum-v1': {
         'lr_pi': 1e-3,
         'lr_q': 1e-3,
@@ -28,8 +29,9 @@ ENV_CONFIGS = {
         'init_alpha': 1.0,
         'target_entropy': -1.0,
         'learning_starts': 1_000,
-        'max_timesteps': 100_000
+        'max_timesteps': 20_000
     },
+    # Expected Return: -500
     'CartPole-v1': {
         'lr_pi': 1e-3,
         'lr_q': 1e-3,
@@ -49,6 +51,7 @@ ENV_CONFIGS = {
     # --------------------------------------------------------------------------
     # 2. MuJoCo (Paper Standard Benchmarks)
     # --------------------------------------------------------------------------
+    # Expected Return: 1400 ~ 2000
     'Hopper-v5': {
         'lr_pi': 3e-4,
         'lr_q': 3e-4,
@@ -62,9 +65,10 @@ ENV_CONFIGS = {
         'init_alpha': 1.0,
         'target_entropy': -3.0,
         'learning_starts': 10_000,
-        'max_timesteps': 1_000_000
+        'max_timesteps': 3_000_000
     },
 
+    # Expected Return: 9500 ~ 10000
     'HalfCheetah-v5': {
         'lr_pi': 3e-4,
         'lr_q': 3e-4,
@@ -81,6 +85,7 @@ ENV_CONFIGS = {
         'max_timesteps': 3_000_000
     },
 
+    # Expected Return: 5000 ~ 6000
     'Humanoid-v4': {
         'lr_pi': 3e-4,
         'lr_q': 3e-4,
@@ -100,6 +105,7 @@ ENV_CONFIGS = {
     # --------------------------------------------------------------------------
     # 3. DeepMind Control Suite (DMC)
     # --------------------------------------------------------------------------
+    # Expected Return: 750 ~ 900
     'dm_control/cheetah-run-v0': {
         'lr_pi': 3e-4,
         'lr_q': 3e-4,
@@ -116,6 +122,7 @@ ENV_CONFIGS = {
         'max_timesteps': 3_000_000
     },
 
+    # Expected Return: 900 ~ 950
     'dm_control/walker-walk-v0': {
         'lr_pi': 3e-4,
         'lr_q': 3e-4,
