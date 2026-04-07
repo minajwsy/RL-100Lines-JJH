@@ -22,8 +22,7 @@ class Buffer:
 
     def sample(self, n):
         idx = T.randint(0, self.bsize, (n,))
-        s, a, r, sp, done = [b[idx].to(conf.device) for b in self.b]
-        return SimpleNamespace(s=s, a=a, r=r, sp=sp, done=done)
+        return SimpleNamespace(**dict(zip(['s', 'a', 'r', 'sp' 'done'], [b[idx].to(conf.device) for b in self.b])))
 
 class PolicyNet(nn.Module):
     def __init__(self, s_dim, a_dim, is_cts):
@@ -83,17 +82,15 @@ if __name__ == '__main__':
     q1, q2, q1_t, q2_t = [QNet(s_dim, a_dim, is_cts) for _ in range(4)]
     [qt.load_state_dict(q.state_dict()) for qt, q in [(q1_t, q1), (q2_t, q2)]]
     for n_step in tqdm(range(conf.max_timesteps // conf.n_envs), unit_scale=conf.n_envs, unit="step"):
-        with T.no_grad():
-            a = T.stack([T.tensor(envs.single_action_space.sample()) for _ in range(conf.n_envs)]) if n_step * conf.n_envs < conf.learning_starts else pi(T.from_numpy(s).float().to(conf.device))[0]
+        a = T.stack([T.tensor(envs.single_action_space.sample()) for _ in range(conf.n_envs)]) if n_step * conf.n_envs < conf.learning_starts else pi(T.from_numpy(s).float().to(conf.device))[0]
         sp, r, done, trunc, info = envs.step(a.cpu().numpy())
         for i in range(conf.n_envs): buf.push((s[i], a[i].detach(), r[i], sp[i], 0. if (done[i] or trunc[i]) else 1.))
         s = sp
-        if "episode" in info and "_episode" in info:
-            for i in np.where(info["_episode"])[0]:
-                score += float(np.array(info["episode"]['r'][i]).item())
-                if (n_epi := n_epi + 1) % print_interval == 0:
-                    tqdm.write(f"step {(n_step+1)*conf.n_envs} episode {n_epi} avg score {score/print_interval:.1f}")
-                    score = 0.0
+        for i in np.where(info.get("_episode", []))[0]:
+            score += float(np.array(info["episode"]['r'][i]).item())
+            if (n_epi := n_epi + 1) % print_interval == 0:
+                tqdm.write(f"step {(n_step+1)*conf.n_envs} episode {n_epi} avg score {score/print_interval:.1f}")
+                score = 0.0
         if (n_step + 1) * conf.n_envs > conf.learning_starts:
             target = calc_target(pi, q1_t, q2_t, mb := buf.sample(conf.batch_size), is_cts)
             [q.train_net(target, mb) for q in [q1, q2]]
