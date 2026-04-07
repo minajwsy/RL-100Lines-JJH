@@ -22,7 +22,7 @@ class Buffer:
 
     def sample(self, n):
         idx = T.randint(0, self.bsize, (n,))
-        return SimpleNamespace(**dict(zip(['s', 'a', 'r', 'sp' 'done'], [b[idx].to(conf.device) for b in self.b])))
+        return SimpleNamespace(**dict(zip(['s', 'a', 'r', 'sp', 'done'], [b[idx].to(conf.device) for b in self.b])))
 
 class PolicyNet(nn.Module):
     def __init__(self, s_dim, a_dim, is_cts):
@@ -38,7 +38,7 @@ class PolicyNet(nn.Module):
     def forward(self, x):
         bb = self.bb(x)
         if self.is_cts:
-            a = (dist := Normal(self.mu(bb), T.clamp(self.log_std(bb), -20, 2).exp())).rsample()
+            a = (dist := Normal(self.mu(bb), T.clamp(self.log_std(bb), -5, 2).exp())).rsample()
             return T.tanh(a), (dist.log_prob(a) - 2 * (np.log(2) - a - F.softplus(-2 * a))).sum(dim=-1, keepdim=True), None
         prob, log_p = F.softmax((logits := self.pi(bb)), dim=-1), F.log_softmax(logits, dim=-1)
         return Categorical(prob).sample(), log_p, prob
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     for n_step in tqdm(range(conf.max_timesteps // conf.n_envs), unit_scale=conf.n_envs, unit="step"):
         a = T.stack([T.tensor(envs.single_action_space.sample()) for _ in range(conf.n_envs)]) if n_step * conf.n_envs < conf.learning_starts else pi(T.from_numpy(s).float().to(conf.device))[0]
         sp, r, done, trunc, info = envs.step(a.cpu().numpy())
-        for i in range(conf.n_envs): buf.push((s[i], a[i].detach(), r[i], sp[i], 0. if (done[i] or trunc[i]) else 1.))
+        for i in range(conf.n_envs): buf.push((s[i], a[i].detach(), r[i], sp[i], 0. if done[i] else 1.))
         s = sp
         for i in np.where(info.get("_episode", []))[0]:
             score += float(np.array(info["episode"]['r'][i]).item())
