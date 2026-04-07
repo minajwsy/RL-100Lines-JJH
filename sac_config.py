@@ -23,6 +23,7 @@ ENV_CONFIGS = {
         'tau': 0.005,
         'target_freq': 1,
         'batch_size': 256,
+        'n_envs': 4,
         'buffer_limit': 100_000,
         'init_alpha': 1.0,
         'target_entropy': -1.0,
@@ -37,6 +38,7 @@ ENV_CONFIGS = {
         'tau': 0.005,
         'target_freq': 1,
         'batch_size': 64,
+        'n_envs': 4,
         'buffer_limit': 100_000,
         'target_entropy': -1.0,
         'init_alpha': 0.01,
@@ -55,6 +57,7 @@ ENV_CONFIGS = {
         'tau': 0.005,
         'target_freq': 1,
         'batch_size': 256,
+        'n_envs': 4,
         'buffer_limit': 1_000_000,
         'init_alpha': 1.0,
         'target_entropy': -3.0,
@@ -70,6 +73,7 @@ ENV_CONFIGS = {
         'tau': 0.005,
         'target_freq': 1,
         'batch_size': 256,
+        'n_envs': 4,
         'buffer_limit': 1_000_000,
         'init_alpha': 1.0,
         'target_entropy': -6.0,
@@ -85,6 +89,7 @@ ENV_CONFIGS = {
         'tau': 0.005,
         'target_freq': 1,
         'batch_size': 256,
+        'n_envs': 4,
         'buffer_limit': 1_000_000,
         'init_alpha': 0.05,
         'target_entropy': -17.0,
@@ -103,6 +108,7 @@ ENV_CONFIGS = {
         'tau': 0.005,
         'target_freq': 1,
         'batch_size': 256,
+        'n_envs': 4,
         'buffer_limit': 1_000_000,
         'init_alpha': 0.1,
         'target_entropy': -6.0,
@@ -118,6 +124,7 @@ ENV_CONFIGS = {
         'tau': 0.005,
         'target_freq': 1,
         'batch_size': 256,
+        'n_envs': 4,
         'buffer_limit': 1_000_000,
         'init_alpha': 0.1,
         'target_entropy': -6.0,
@@ -139,6 +146,7 @@ else:
     print(f"[Warning] '{env_name}' Use default environment(Pendulum-v1).")
     cfg = default_cfg
 
+n_envs = cfg['n_envs']
 lr_pi = cfg['lr_pi']
 lr_q = cfg['lr_q']
 lr_alpha = cfg['lr_alpha']

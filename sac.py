@@ -1,13 +1,15 @@
-import gymnasium as gym, torch as T, torch.nn as nn, torch.nn.functional as F, sac_config as conf, numpy as np, shimmy
+import gymnasium as gym, gymnasium.wrappers as wrappers, torch as T, torch.nn as nn, torch.nn.functional as F, sac_config as conf, numpy as np, shimmy
 from torch.distributions import Normal, Categorical
 from types import SimpleNamespace
 from tqdm import tqdm
 
-def make_env(env_id):
-    env = gym.wrappers.FlattenObservation(gym.wrappers.RecordEpisodeStatistics(gym.make(env_id)))
-    if (is_cts := isinstance(env.action_space, gym.spaces.Box)):
-        env = gym.wrappers.RescaleAction(env, -1.0, 1.0)
-    return env, is_cts, env.observation_space.shape[0], env.action_space.shape[0] if is_cts else env.action_space.n
+
+def make_envs(env_id, n_envs):
+    envs = gym.vector.SyncVectorEnv([lambda: gym.make(env_id) for _ in range(n_envs)])
+    envs = wrappers.vector.FlattenObservation(wrappers.vector.RecordEpisodeStatistics(envs))
+    if (is_cts := isinstance(envs.single_action_space, gym.spaces.Box)):
+        envs = wrappers.vector.RescaleAction(envs, -1.0, 1.0)
+    return envs, is_cts, envs.single_observation_space.shape[0], envs.single_action_space.shape[0] if is_cts else envs.single_action_space.n
 
 def optim_step(opt, loss): opt.zero_grad(), loss.mean().backward(), opt.step()
 
@@ -77,25 +79,28 @@ def calc_target(pi, q1_t, q2_t, mb, is_cts):  # mb: mini-batch
         return mb.r + conf.gamma * mb.done * (v if is_cts else (prob * v).sum(-1, keepdim=True))
 
 if __name__ == '__main__':
-    env, is_cts, s_dim, a_dim = make_env(conf.env_name)
-    buf, pi, s, score, n_epi, print_interval = Buffer(s_dim, a_dim, is_cts), PolicyNet(s_dim, a_dim, is_cts), env.reset()[0], 0.0, 0, 20
+    envs, is_cts, s_dim, a_dim = make_envs(conf.env_name, conf.n_envs)
+    buf, pi, s, score, n_epi, print_interval = Buffer(s_dim, a_dim, is_cts), PolicyNet(s_dim, a_dim, is_cts), envs.reset()[0], 0.0, 0, 20
     q1, q2, q1_t, q2_t = [QNet(s_dim, a_dim, is_cts) for _ in range(4)]
     [qt.load_state_dict(q.state_dict()) for qt, q in [(q1_t, q1), (q2_t, q2)]]
-    for n_step in tqdm(range(conf.max_timesteps)):
-        with T.no_grad(): a = T.tensor(env.action_space.sample()) if n_step < conf.learning_starts else pi(T.from_numpy(s).float().to(conf.device))[0]
-        sp, r, done, trunc, info = env.step(a.cpu().numpy() if is_cts else a.item())
-        buf.push((s, a.detach(), r, sp, 0. if done else 1.))
-        if done or trunc:
-            n_epi, score = n_epi + 1, score + info['episode']['r']
-            if n_epi % print_interval == 0:
-                tqdm.write(f"step {n_step+1} episode {n_epi} avg score {score/print_interval:.1f}")
-                score = 0.0
-            s, _ = env.reset()
-        else: s = sp
-        if n_step > conf.learning_starts:
+    for n_step in tqdm(range(conf.max_timesteps // conf.n_envs), unit_scale=conf.n_envs, unit="step"):
+        with T.no_grad():
+            a = T.stack([T.tensor(envs.single_action_space.sample()) for _ in range(conf.n_envs)]) if n_step * conf.n_envs < conf.learning_starts else pi(T.from_numpy(s).float().to(conf.device))[0]
+        sp, r, done, trunc, info = envs.step(a.cpu().numpy())
+        for i in range(conf.n_envs):
+            real_sp = info['final_observation'][i] if (done[i] or trunc[i]) and "final_observation" in info else sp[i]
+            buf.push((s[i], a[i].detach(), r[i], real_sp, 0. if (done[i] or trunc[i]) else 1.))
+        s = sp
+        if "episode" in info and "_episode" in info:
+            for i in np.where(info["_episode"])[0]:
+                score += float(np.array(info["episode"]['r'][i]).item())
+                if (n_epi := n_epi + 1) % print_interval == 0:
+                    tqdm.write(f"step {(n_step+1)*conf.n_envs} episode {n_epi} avg score {score/print_interval:.1f}")
+                    score = 0.0
+        if (n_step + 1) * conf.n_envs > conf.learning_starts:
             target = calc_target(pi, q1_t, q2_t, mb := buf.sample(conf.batch_size), is_cts)
             [q.train_net(target, mb) for q in [q1, q2]]
             pi.train_net(q1, q2, mb)
-            if (n_step+1) % conf.target_freq == 0:
+            if (n_step + 1) * conf.n_envs % conf.target_freq == 0:
                 [q.soft_update(q_t) for q, q_t in [(q1, q1_t), (q2, q2_t)]]
-    env.close()
+    envs.close()
