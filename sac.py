@@ -3,7 +3,6 @@ from torch.distributions import Normal, Categorical
 from types import SimpleNamespace
 from tqdm import tqdm
 
-
 def make_envs(env_id, n_envs):
     envs = gym.vector.SyncVectorEnv([lambda: gym.make(env_id) for _ in range(n_envs)])
     envs = wrappers.vector.FlattenObservation(wrappers.vector.RecordEpisodeStatistics(envs))
@@ -22,7 +21,7 @@ class Buffer:
         self.p, self.bsize = (self.p + 1) % conf.buffer_limit, min(self.bsize + 1, conf.buffer_limit)
 
     def sample(self, n):
-        idx = (T.randint(0, self.bsize, (n,)))
+        idx = T.randint(0, self.bsize, (n,))
         s, a, r, sp, done = [b[idx].to(conf.device) for b in self.b]
         return SimpleNamespace(s=s, a=a, r=r, sp=sp, done=done)
 
