@@ -14,10 +14,10 @@ Inspired by [minimalRL](https://github.com/seungeunrho/minimalRL).
 
 | Algorithm | Lines | Action Space | Vectorized Envs | CUDA | Key Features | Supported Environments |
 |:---------:|:-----:|:------------:|:---------------:|:----:|:-------------|:----------------------|
-| [DQN](https://github.com/jaehyun-jeong/100LinesRL/blob/master/dqn.py) | 86 | Discrete | No | No | Replay buffer, Target network, ε-greedy | Classic Control |
 | [PPO](https://github.com/jaehyun-jeong/100LinesRL/blob/master/ppo.py) | 100 | Discrete, Continuous | Yes | Yes | GAE, Obs/Reward normalization, Entropy bonus, Grad clipping, LR annealing | Classic Control, MuJoCo, DMControl |
 | [SAC](https://github.com/jaehyun-jeong/100LinesRL/blob/master/sac.py) | 100 | Discrete, Continuous | Yes | Yes | Replay buffer, Twin Q-networks, Auto entropy tuning, Soft target update | Classic Control, MuJoCo, DMControl |
 | [TD3](https://github.com/jaehyun-jeong/100LinesRL/blob/master/td3.py) | 100 | Continuous | No | No | Twin Q-networks, Delayed policy update, Target policy smoothing, EMA | Classic Control |
+| [DQN](https://github.com/jaehyun-jeong/100LinesRL/blob/master/dqn.py) | 86 | Discrete | No | No | Replay buffer, Target network, ε-greedy | Classic Control |
 
 
 ![](./rewards.png)
