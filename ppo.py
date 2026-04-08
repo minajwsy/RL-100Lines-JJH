@@ -15,30 +15,30 @@ def make_envs(env_id, n_envs):
     envs = wrappers.vector.TransformObservation(envs, lambda obs: np.clip(obs, -10, 10))
     envs = wrappers.vector.NormalizeReward(envs, gamma=conf.gamma)
     envs = wrappers.vector.TransformReward(envs, lambda r: np.clip(r, -10, 10))
-    if (is_cts := isinstance(envs.single_action_space, gym.spaces.Box)):
+    if (cts := isinstance(envs.single_action_space, gym.spaces.Box)):
         envs = wrappers.vector.RescaleAction(envs, -1.0, 1.0)
         envs = wrappers.vector.ClipAction(envs)
-    return envs, is_cts, envs.single_observation_space.shape[0], envs.single_action_space.shape[0] if is_cts else envs.single_action_space.n
+    return envs, cts, envs.single_observation_space.shape[0], envs.single_action_space.shape[0] if cts else envs.single_action_space.n
 
 class PPO(nn.Module):
-    def __init__(self, s_dim, a_dim, is_cts):
+    def __init__(self, s_dim, a_dim, cts):
         super().__init__()
-        self.is_cts, self.s_dim, self.a_dim = is_cts, s_dim, a_dim
-        self.buf, self.p = [T.zeros(conf.T_horizon, conf.n_envs, i, device=conf.device) for i in [s_dim, a_dim if is_cts else 1, 1, s_dim, 1, 1]], 0
+        self.cts, self.s_dim, self.a_dim = cts, s_dim, a_dim
+        self.buf, self.p = [T.zeros(conf.T_horizon, conf.n_envs, i, device=conf.device) for i in [s_dim, a_dim if cts else 1, 1, s_dim, 1, 1]], 0
 
         self.pi_net, self.v_net = [nn.Sequential(
             layer_init(nn.Linear(s_dim, 256)), nn.Tanh(),
             layer_init(nn.Linear(256, 256)), nn.Tanh()
         ) for _ in range(2)]
-        self.mu_head = layer_init(nn.Linear(256, a_dim), std=0.01) if is_cts else None
-        self.log_std = nn.Parameter(T.zeros(a_dim)) if is_cts else None
-        self.pi_head = nn.Sequential(layer_init(nn.Linear(256, a_dim), std=0.01)) if not is_cts else None
+        self.mu_head = layer_init(nn.Linear(256, a_dim), std=0.01) if cts else None
+        self.log_std = nn.Parameter(T.zeros(a_dim)) if cts else None
+        self.pi_head = nn.Sequential(layer_init(nn.Linear(256, a_dim), std=0.01)) if not cts else None
         self.v_head = layer_init(nn.Linear(256, 1), std=1.0)
         self.to(conf.device)
         self.optimizer = optim.Adam(self.parameters(), lr=conf.lr)
 
     def pi(self, x, a=None):
-        if self.is_cts:
+        if self.cts:
             dist = Normal(self.mu_head(self.pi_net(x)), T.exp(self.log_std))
             if a is None: a = dist.sample()
             return a, a.detach().cpu().numpy(), dist.log_prob(a).sum(dim=-1, keepdim=True), dist
@@ -73,7 +73,7 @@ class PPO(nn.Module):
 
                 loss = -T.min(ratio * mb_adv, T.clamp(ratio, 1-conf.eps_clip, 1+conf.eps_clip) * mb_adv).mean() \
                     + 0.5 * conf.vf_coef * F.mse_loss(self.v(s[inds]), returns[inds]) \
-                    - conf.ent_coef * (dist.entropy().sum(-1) if self.is_cts else dist.entropy()).mean()
+                    - conf.ent_coef * (dist.entropy().sum(-1) if self.cts else dist.entropy()).mean()
 
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -81,8 +81,8 @@ class PPO(nn.Module):
                 self.optimizer.step()
 
 if __name__ == '__main__':
-    envs, is_cts, s_dim, a_dim = make_envs(conf.env_name, conf.n_envs)
-    model, total_step = PPO(s_dim, a_dim, is_cts), conf.max_timesteps // conf.n_envs
+    envs, cts, s_dim, a_dim = make_envs(conf.env_name, conf.n_envs)
+    model, total_step = PPO(s_dim, a_dim, cts), conf.max_timesteps // conf.n_envs
     s, score, n_epi, print_interval = envs.reset()[0], 0.0, 0, 20
     for n_step in tqdm(range(total_step), unit_scale=conf.n_envs, unit="step"):
         model.optimizer.param_groups[0]['lr'] = lr = conf.lr * (1 - n_step / total_step)
