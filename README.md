@@ -12,12 +12,12 @@ Inspired by [minimalRL](https://github.com/seungeunrho/minimalRL).
 
 ## Algorithms
 
-| Algorithm | Lines | Action Space | Vectorized Envs | CUDA | Key Features | Supported Environments |
-|:---------:|:-----:|:------------:|:---------------:|:----:|:-------------|:----------------------|
-| [PPO](https://github.com/jaehyun-jeong/100LinesRL/blob/master/ppo.py) | 100 | Discrete, Continuous | Yes | Yes | GAE, Obs/Reward normalization, Entropy bonus, Grad clipping, LR annealing | Classic Control, MuJoCo, DMControl |
-| [SAC](https://github.com/jaehyun-jeong/100LinesRL/blob/master/sac.py) | 100 | Discrete, Continuous | Yes | Yes | Replay buffer, Twin Q-networks, Auto entropy tuning, Soft target update | Classic Control, MuJoCo, DMControl |
-| [TD3](https://github.com/jaehyun-jeong/100LinesRL/blob/master/td3.py) | 100 | Continuous | No | No | Twin Q-networks, Delayed policy update, Target policy smoothing, EMA | Classic Control |
-| [DQN](https://github.com/jaehyun-jeong/100LinesRL/blob/master/dqn.py) | 86 | Discrete | No | No | Replay buffer, Target network, ε-greedy | Classic Control |
+| Algorithm | Lines | Action Space | Vectorized Envs | CUDA | Supported Environments |
+|:---------:|:-----:|:------------:|:---------------:|:----:|:----------------------|
+| [PPO](https://github.com/jaehyun-jeong/100LinesRL/blob/master/ppo.py) | 100 | Discrete, Continuous | :white_check_mark: | :white_check_mark: | Classic Control, MuJoCo, DMControl |
+| [SAC](https://github.com/jaehyun-jeong/100LinesRL/blob/master/sac.py) | 100 | Discrete, Continuous | :white_check_mark: | :white_check_mark: | Classic Control, MuJoCo, DMControl |
+| [TD3](https://github.com/jaehyun-jeong/100LinesRL/blob/master/td3.py) | 100 | Continuous | :x: | :x: | Classic Control |
+| [DQN](https://github.com/jaehyun-jeong/100LinesRL/blob/master/dqn.py) | 86 | Discrete | :x: | :x: | Classic Control |
 
 
 ![](./rewards.png)

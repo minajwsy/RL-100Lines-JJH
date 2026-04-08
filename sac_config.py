@@ -29,7 +29,7 @@ ENV_CONFIGS = {
         'init_alpha': 1.0,
         'target_entropy': -1.0,
         'learning_starts': 1_000,
-        'max_timesteps': 20_000
+        'max_timesteps': 100_000
     },
     # Expected Return: -500
     'CartPole-v1': {
