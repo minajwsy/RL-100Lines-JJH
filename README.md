@@ -10,15 +10,15 @@ Implementations of basic RL algorithms with minimal lines of codes! (PyTorch bas
 
 Inspired by [minimalRL](https://github.com/seungeunrho/minimalRL).
 
-* Each core algorithm is complete within a single file.
+## Algorithms
 
-* Length of each file is up to 100 lines of codes.
+| Algorithm | Lines | Action Space | Vectorized Envs | CUDA | Key Features | Supported Environments |
+|:---------:|:-----:|:------------:|:---------------:|:----:|:-------------|:----------------------|
+| [DQN](https://github.com/jaehyun-jeong/100LinesRL/blob/master/dqn.py) | 86 | Discrete | No | No | Replay buffer, Target network, ε-greedy | Classic Control |
+| [PPO](https://github.com/jaehyun-jeong/100LinesRL/blob/master/ppo.py) | 100 | Discrete, Continuous | Yes | Yes | GAE, Obs/Reward normalization, Entropy bonus, Grad clipping, LR annealing | Classic Control, MuJoCo, DMControl |
+| [SAC](https://github.com/jaehyun-jeong/100LinesRL/blob/master/sac.py) | 100 | Discrete, Continuous | Yes | Yes | Replay buffer, Twin Q-networks, Auto entropy tuning, Soft target update | Classic Control, MuJoCo, DMControl |
+| [TD3](https://github.com/jaehyun-jeong/100LinesRL/blob/master/td3.py) | 100 | Continuous | No | No | Twin Q-networks, Delayed policy update, Target policy smoothing, EMA | Classic Control |
 
-* **PPO** and **SAC** support Gymnasium, MuJoCo, and DeepMind Control environments for both discrete and continuous action spaces.
-
-* **PPO** and **SAC** support both discrete and continuous action spaces.
-
-* **PPO** supports cuda.
 
 ![](./rewards.png)
 
@@ -27,12 +27,6 @@ Inspired by [minimalRL](https://github.com/seungeunrho/minimalRL).
 | **Classic** | ![](./gifs/sac_CartPole-v1.gif) <br> sac/CartPole-v1 | ![](./gifs/sac_Pendulum-v1.gif) <br> sac/Pendulum-v1 | |
 | **MuJoCo** | ![](./gifs/sac_HalfCheetah-v5.gif) <br> sac/HalfCheetah-v5 | ![](./gifs/sac_Hopper-v5.gif) <br> sac/Hopper-v5 | ![](./gifs/sac_Humanoid-v4.gif) <br> sac/Humanoid-v4 |
 | **DMControl** | ![](./gifs/sac_cheetah-run-v0.gif) <br> sac/cheetah-run-v0 | ![](./gifs/sac_walker-walk-v0.gif) <br> sac/walker-walk-v0 | |
-
-## Algorithms
-1. [DQN](https://github.com/jaehyun-jeong/100LinesRL/blob/master/dqn.py) (86 lines, including replay memory and target network)
-2. [PPO](https://github.com/jaehyun-jeong/100LinesRL/blob/master/ppo.py) (100 lines, including GAE and vectorized environments)
-3. [SAC](https://github.com/jaehyun-jeong/100LinesRL/blob/master/sac.py) (98 lines)
-4. [TD3](https://github.com/jaehyun-jeong/100LinesRL/blob/master/td3.py) (100 lines)
 
 ## Dependencies
 1. [PyTorch](https://pytorch.org/) >= 2.10.0
