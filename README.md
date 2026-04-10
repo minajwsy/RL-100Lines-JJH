@@ -22,10 +22,16 @@ Inspired by [minimalRL](https://github.com/seungeunrho/minimalRL).
 
 ![](./rewards.png)
 
-| | Classic/CartPole-v1 | Classic/Pendulum-v1 | MuJoCo/HalfCheetah-v5 | MuJoCo/Hopper-v5 | MuJoCo/Walker2d-v5 | MuJoCo/Humanoid-v4 | DMC/cheetah-run-v0 | DMC/walker-walk-v0 |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **SAC** | ![](./gifs/sac_CartPole-v1.gif) | ![](./gifs/sac_Pendulum-v1.gif) | ![](./gifs/sac_HalfCheetah-v5.gif) | ![](./gifs/sac_Hopper-v5.gif) | | ![](./gifs/sac_Humanoid-v4.gif) | ![](./gifs/sac_cheetah-run-v0.gif) | ![](./gifs/sac_walker-walk-v0.gif) |
-| **PPO** | ![](./gifs/ppo_CartPole-v1.gif) | | | ![](./gifs/ppo_Hopper-v5.gif) | ![](./gifs/ppo_Walker2d-v5.gif) | | ![](./gifs/ppo_cheetah-run-v0.gif) | ![](./gifs/ppo_walker-walk-v0.gif) |
+| **Classic** | CartPole-v1 | Pendulum-v1 | | |
+|:---:|:---:|:---:|:---:|:---:|
+| **SAC** | ![](./gifs/sac_CartPole-v1.gif) | ![](./gifs/sac_Pendulum-v1.gif) | | |
+| **PPO** | ![](./gifs/ppo_CartPole-v1.gif) | | | |
+| **MuJoCo** | HalfCheetah-v5 | Hopper-v5 | Walker2d-v5 | Humanoid-v4 |
+| **SAC** | ![](./gifs/sac_HalfCheetah-v5.gif) | ![](./gifs/sac_Hopper-v5.gif) | | ![](./gifs/sac_Humanoid-v4.gif) |
+| **PPO** | | ![](./gifs/ppo_Hopper-v5.gif) | ![](./gifs/ppo_Walker2d-v5.gif) | |
+| **DMC** | cheetah-run-v0 | walker-walk-v0 | | |
+| **SAC** | ![](./gifs/sac_cheetah-run-v0.gif) | ![](./gifs/sac_walker-walk-v0.gif) | | |
+| **PPO** | ![](./gifs/ppo_cheetah-run-v0.gif) | ![](./gifs/ppo_walker-walk-v0.gif) | | |
 
 ## Dependencies
 1. [PyTorch](https://pytorch.org/) >= 2.10.0
