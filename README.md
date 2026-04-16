@@ -17,7 +17,7 @@ Inspired by [minimalRL](https://github.com/seungeunrho/minimalRL).
 | [PPO](https://github.com/jaehyun-jeong/100LinesRL/blob/master/ppo.py) | 100 | Discrete, Continuous | :white_check_mark: | :white_check_mark: | Classic Control, MuJoCo, DMControl |
 | [SAC](https://github.com/jaehyun-jeong/100LinesRL/blob/master/sac.py) | 100 | Discrete, Continuous | :white_check_mark: | :white_check_mark: | Classic Control, MuJoCo, DMControl |
 | [TD3](https://github.com/jaehyun-jeong/100LinesRL/blob/master/td3.py) | 100 | Continuous | :x: | :x: | Classic Control |
-| [DQN](https://github.com/jaehyun-jeong/100LinesRL/blob/master/dqn.py) | 86 | Discrete | :x: | :x: | Classic Control |
+| [DQN](https://github.com/jaehyun-jeong/100LinesRL/blob/master/dqn.py) | 98 | Discrete | :white_check_mark: | :white_check_mark: | Classic Control |
 
 
 ![](./rewards.png)
