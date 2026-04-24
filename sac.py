@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from tqdm import tqdm
 
 def make_envs(env_id, n_envs):
-    envs = gym.vector.SyncVectorEnv([lambda: gym.make(env_id) for _ in range(n_envs)])
+    envs = gym.vector.SyncVectorEnv([lambda: gym.make(env_id, render_mode="human" if conf.render else None) for _ in range(n_envs)])
     envs = wrappers.vector.FlattenObservation(wrappers.vector.RecordEpisodeStatistics(envs))
     if (cts := isinstance(envs.single_action_space, gym.spaces.Box)):
         envs = wrappers.vector.RescaleAction(envs, -1.0, 1.0)

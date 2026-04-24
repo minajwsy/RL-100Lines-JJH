@@ -117,11 +117,12 @@ ENV_CONFIGS = {
 # User Selection
 # ==============================================================================
 
-parser = argparse.ArgumentParser(description='PPO Hyperparameters')
-parser.add_argument('--env', type=str, default="dm_control/cheetah-run-v0", help='Environment name')
-args = parser.parse_args()
+parser = argparse.ArgumentParser(description='DQN Hyperparameters')
+parser.add_argument('--env', type=str, default="CartPole-v1", help='Environment name')
+parser.add_argument('--render', action='store_true', help='Enable rendering')
+args, _ = parser.parse_known_args()
 env_name = args.env
-'''CartPole-v1, LunarLanderContinuous-v3, Hopper-v5, Walker2d-v5, dm_control/cheetah-run-v0, dm_control/walker-walk-v0'''
+render = args.render
 
 default_cfg = ENV_CONFIGS['LunarLanderContinuous-v3']
 

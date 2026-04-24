@@ -86,8 +86,10 @@ ENV_CONFIGS = {
 
 parser = argparse.ArgumentParser(description='DQN Hyperparameters')
 parser.add_argument('--env', type=str, default="CartPole-v1", help='Environment name')
+parser.add_argument('--render', action='store_true', help='Enable rendering')
 args, _ = parser.parse_known_args()
 env_name = args.env
+render = args.render
 
 default_cfg = ENV_CONFIGS['CartPole-v1']
 

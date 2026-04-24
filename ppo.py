@@ -8,7 +8,7 @@ def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
     return layer
 
 def make_envs(env_id, n_envs):
-    envs = gym.vector.SyncVectorEnv([lambda: gym.make(env_id) for _ in range(n_envs)])
+    envs = gym.vector.SyncVectorEnv([lambda: gym.make(env_id, render_mode="human" if conf.render else None) for _ in range(n_envs)])
     envs = wrappers.vector.FlattenObservation(envs)
     envs = wrappers.vector.RecordEpisodeStatistics(envs)
     envs = wrappers.vector.NormalizeObservation(envs)

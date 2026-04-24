@@ -142,8 +142,10 @@ ENV_CONFIGS = {
 
 parser = argparse.ArgumentParser(description='SAC Hyperparameters')
 parser.add_argument('--env', type=str, default="Hopper-v5", help='Environment name')
+parser.add_argument('--render', action='store_true', help='Enable rendering')
 args, _ = parser.parse_known_args()
 env_name = args.env
+render = args.render
 
 default_cfg = ENV_CONFIGS['Pendulum-v1']
 

@@ -6,7 +6,7 @@ from tqdm import tqdm
 import dqn_config as conf
 
 def make_envs(env_id, n_envs):
-    envs = gym.vector.SyncVectorEnv([lambda: gym.make(env_id) for _ in range(n_envs)])
+    envs = gym.vector.SyncVectorEnv([lambda: gym.make(env_id, render_mode="human" if conf.render else None) for _ in range(n_envs)])
     envs = wrappers.vector.FlattenObservation(wrappers.vector.RecordEpisodeStatistics(envs))
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), \
         f"DQN requires Discrete action space. {env_id} is not supported."
